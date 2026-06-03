@@ -27,7 +27,7 @@ When absolute percentage change is greater than or equal to the threshold:
 7. Continue polling until process termination signal.
 
 ## Core Logic
-The central decision engine is implemented in src/bot.ts and follows this per-pair rule:
+The central decision engine is implemented in [src/bot.ts](src/bot.ts) and follows this per-pair rule:
 1. First successful ticker read sets the baseline rate with no alert.
 2. Every next read computes percentage change from baseline.
 3. If absolute change is greater than or equal to threshold, create an alert payload.
@@ -36,25 +36,52 @@ The central decision engine is implemented in src/bot.ts and follows this per-pa
 
 This design prevents silent data loss and avoids alert storms caused by advancing the baseline when all persistence targets fail.
 
-The threshold math is implemented in src/utils.ts:
+The threshold math is implemented in [src/utils.ts](src/utils.ts):
 - percentage change = ((current - previous) / previous) * 100
 - alert condition = abs(percentage change) >= threshold
 
+Core logic pseudocode:
+
+```text
+for each pair:
+  currentRate = fetchTicker(pair)
+
+  if baseline is null:
+    baseline = currentRate
+    return
+
+  changePct = ((currentRate - baseline) / baseline) * 100
+
+  if abs(changePct) >= threshold:
+    alert = buildAlert(pair, baseline, currentRate, changePct)
+    persisted = saveToStores(alert)
+
+    if persisted:
+      baseline = currentRate
+```
+
+Quick example:
+- Baseline = 100.00
+- Threshold = 0.50%
+- New rate = 100.60
+- Change = ((100.60 - 100.00) / 100.00) * 100 = 0.60%
+- 0.60% >= 0.50%, so alert is triggered.
+
 ## Core Files and Responsibilities
-- src/cli.ts: application entrypoint, dependency wiring, graceful shutdown handling.
-- src/config.ts: CLI and environment parsing with validation for intervals, threshold, and timeouts.
-- src/bot.ts: polling scheduler, pair state tracking, trigger decision, and store persistence strategy.
-- src/ticker-client.ts: Uphold API fetch logic, timeout handling, response validation, and midpoint rate calculation.
-- src/utils.ts: pair normalization and threshold math utilities.
-- src/alert-store.ts: console alert renderer.
-- src/postgres-alert-store.ts: schema initialization and durable alert inserts.
-- src/logger.ts: structured JSON logging with log-level filtering.
-- src/types.ts: shared contracts between bot, client, and stores.
+- [src/cli.ts](src/cli.ts): application entrypoint, dependency wiring, graceful shutdown handling.
+- [src/config.ts](src/config.ts): CLI and environment parsing with validation for intervals, threshold, and timeouts.
+- [src/bot.ts](src/bot.ts): polling scheduler, pair state tracking, trigger decision, and store persistence strategy.
+- [src/ticker-client.ts](src/ticker-client.ts): Uphold API fetch logic, timeout handling, response validation, and midpoint rate calculation.
+- [src/utils.ts](src/utils.ts): pair normalization and threshold math utilities.
+- [src/alert-store.ts](src/alert-store.ts): console alert renderer.
+- [src/postgres-alert-store.ts](src/postgres-alert-store.ts): schema initialization and durable alert inserts.
+- [src/logger.ts](src/logger.ts): structured JSON logging with log-level filtering.
+- [src/types.ts](src/types.ts): shared contracts between bot, client, and stores.
 
 Supporting tests:
-- test/bot.test.ts: initial baseline, up/down trigger checks, below-threshold behavior, multi-store success rules.
-- test/ticker-client.test.ts: midpoint calculation, API failure handling, invalid payload handling.
-- test/config.test.ts and test/utils.test.ts: validation of parsing and math helpers.
+- [test/bot.test.ts](test/bot.test.ts): initial baseline, up/down trigger checks, below-threshold behavior, multi-store success rules.
+- [test/ticker-client.test.ts](test/ticker-client.test.ts): midpoint calculation, API failure handling, invalid payload handling.
+- [test/config.test.ts](test/config.test.ts) and [test/utils.test.ts](test/utils.test.ts): validation of parsing and math helpers.
 
 ## Main Components
 - CLI entrypoint: bootstraps config, dependencies, and shutdown handling.
