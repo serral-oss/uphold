@@ -1,0 +1,48 @@
+{
+  "name": "uphold-bot",
+  "version": "1.0.0",
+  "description": "Uphold price oscillation alert bot",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "uphold-bot": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "tsx watch src/cli.ts",
+    "format": "prettier --write \"**/*.{js,ts}\" --log-level warn",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "uphold",
+    "bot",
+    "ticker",
+    "btc",
+    "alerts",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "@types/yargs": "^17.0.33",
+    "prettier": "^3.8.3",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

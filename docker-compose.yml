@@ -1,0 +1,32 @@
+services:
+  uphold-bot:
+    build: .
+    environment:
+      PAIRS: ${PAIRS:-BTC-USD}
+      INTERVAL_MS: ${INTERVAL_MS:-5000}
+      THRESHOLD_PERCENTAGE: ${THRESHOLD_PERCENTAGE:-0.01}
+      DATABASE_URL: postgres://uphold:uphold@postgres:5432/uphold_bot
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: uphold
+      POSTGRES_PASSWORD: uphold
+      POSTGRES_DB: uphold_bot
+    ports:
+      - "5432:5432"
+    volumes:
+      - uphold_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uphold -d uphold_bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  uphold_postgres_data:
